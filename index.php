@@ -3,6 +3,7 @@
 Builds RSS feed from a git repository.
 ############################################################################ */
 
+
 /* ----- Load required files. ----- */
 
 if (!file_exists("settings.php")) die ("Create a file 'settings.php'. You can copy 'settings_sample.php' from the same folder.");
@@ -10,6 +11,16 @@ include_once ("settings.php");
 
 # Check if login is required
 if ($settings['passwordFile'] != "") include ($settings['passwordFile']); 
+
+/* ----- Return cached contents if appropriate ----- */
+
+if ( file_exists("./cached.xml") and time() - $settings['cacheRefreshTime'] < filemtime("./cached.xml") ) {
+    die ( file_get_contents("./cached.xml") );
+}
+
+/* ----- Start output buffer for caching. ----- */
+
+ob_start();
 
 $settings['homepage'] = trim($settings['homepage'], "/");
 
@@ -134,6 +145,10 @@ EOD;
 
 echo PHP_EOL. '</channel>';
 echo PHP_EOL. '</rss>';
+
+file_put_contents ("./cached.xml", ob_get_contents());
+
+ob_end_flush ();
 
 ?>
 
